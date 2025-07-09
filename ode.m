@@ -16,11 +16,11 @@ function [xDot] = ode(x, t, dotH, EarthParams, ChibisParams)
     gravityMoment = 3 * EarthParams.muE / norm(rSSC)^5 * cross(rSSC, ChibisParams.J * rSSC);
     externalMoment = gravityMoment;
     controlMoment = - dotH - cross(omega, H);
-    % for i=1:3
-    %     if (controlMoment(i) > ChibisParams.MMax)
-    %         controlMoment(i) = ChibisParams.MMax;
-    %     end
-    % end
+    for i=1:3
+        if (controlMoment(i) > ChibisParams.MMax)
+            controlMoment(i) = ChibisParams.MMax;
+        end
+    end
     moment = externalMoment + controlMoment;
 
 %% Расчёт производных

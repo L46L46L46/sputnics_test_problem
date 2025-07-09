@@ -26,9 +26,8 @@ function [omegaRef, LambdaRef] = RefOmegaQuat(r, LambdaRefPrevios, EarthParams)
     LambdaRef = mDcm2quat(R);
 
     %% сохранение знака
-    if norm(LambdaRef' - LambdaRefPrevios) > norm(LambdaRef' + LambdaRefPrevios)
+    if dot(LambdaRef(2:4), LambdaRefPrevios(2:4)) < 0
            LambdaRef = - LambdaRef;
     end
-    LambdaRef = LambdaRef';
     omegaRef = R' * omegaOrb; % перевести в ИСК
 end
