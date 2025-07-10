@@ -31,7 +31,7 @@ classdef Satellite < handle
             this.dotH = zeros(3, N);
             this.omegaRotor = zeros(3, N);
             % орбитальные элементы
-            phi = pi/6;
+            phi = 2 * pi * rand;
             pOrbit = EarthParams.RE + hOrbit;
             this.r(1:3, 1) = sqrt(EarthParams.muE/pOrbit) * [cos(inc)*sin(phi); -cos(inc)*cos(phi); sin(inc)];
             this.r(4:6, 1) = pOrbit * [cos(phi); sin(phi); 0];

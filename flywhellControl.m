@@ -1,9 +1,6 @@
 function [controlExpected] = flywhellControl(satellite, t, k, Lambda, ChibisParams, controlConst, EarthParams)
     omega = satellite.omega(:, k);
     QStabilization = satellite.getQStabilization(Lambda, k);
-    %satellite.LambdaRel(:, k) = MNQuatMultiply(mQuatConj(satellite.Lambda), satellite.QRel(:, k));
-
-%    satellite.S(:, k) = 4 * satellite.QRel(1, k) * satellite.QRel(2:4, k);
     satellite.S(:, k) = 4 * QStabilization(1) * QStabilization(2:4);
     rSSC = mQuat2dcm(satellite.Q(:, k), true) * satellite.r(4:6, k);
     J = [ChibisParams.J(1, 1), 0, 0;
