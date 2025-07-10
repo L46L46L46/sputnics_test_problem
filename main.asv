@@ -1,0 +1,58 @@
+clc
+clear all
+close all
+
+dt = 1;
+t = 0:dt:1e6;
+N = length(t);
+
+EarthParams = struct();
+EarthParams.muE = 3.986e5; %в километрах
+EarthParams.RE = 6371.302; %средний радиус в километрах
+EarthParams.omegaE = 7.292 * 10^(-5);
+EarthParams.J2 = 1052.8e-9;
+EarthParams.mu0 = 7.8 * 1e6;
+EarthParams.delta = 3/2 * EarthParams.mu0 * EarthParams.J2 * EarthParams.RE^2; % поправка на вторую гармионику
+% EarthParams.rho = 2.86e-13; % плотность атмосферы
+
+ChibisParams = struct();
+ChibisParams.J = [3.0, -0.1, 0.0;
+                 -0.1, 2.3, 0.2;
+                 0.0, 0.2, 1.9];
+ChibisParams.invJ = inv(ChibisParams.J);
+ChibisParams.HMax = 0.2;
+ChibisParams.MMax = 0.005;
+ChibisParams.JRotor = 5e-4;
+% параметры для стабилизации - взяты из статьи МЮ
+ChibisParams.deltaMax = 0.002;
+ChibisParams.omegaMax = ChibisParams.HMax / ChibisParams.JRotor;
+% ChibisParams.L = 0.1; % остаточный дипольный момент
+% ChibisParams.ra = 0.05; % характерная площадь аппарата
+% ChibisParams.Cx = 2.1;
+% ChibisParams.S = 0.1;
+
+% данные орбиты - взяты из статьи МЮ
+inc = 56.7 * pi / 180;
+hOrbit = 550;
+
+% задаём начальные данные и основные векторы
+satellite = Satellite(hOrbit, inc, N, EarthParams);
+
+% расчёт постоянных управления
+controlConst = controlParams(ChibisParams);
+
+for k=1:N-1
+    satellite.initRefRel(k);
+    satellite.dotH(:, k) = flywhellControl(satellite, t, k, ChibisParams, controlConst, EarthParams);
+    satellite.omegaRotor(:, k) = satellite.H(:, k) / ChibisParams.JRotor;
+
+    integrator(satellite, k, t(k), dt, EarthParams, ChibisParams);
+    disp(100 * k / N);
+end
+satellite.initRefRel(N);
+
+getPlot(t, satellite.omegaRel, 'omegaRel');
+getPlot(t, satellite.QRel, 'QRel');
+getPlot(t, satellite.omegaRotor, 'omegaRotor');
+getPlot(t, satellite.S, 'S');
+getPlot(t, satellite.H, 'H');

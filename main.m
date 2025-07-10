@@ -2,8 +2,8 @@ clc
 clear all
 close all
 
-dt = 1;
-t = 0:dt:1e7;
+dt = 10;
+t = 0:dt:1e4;
 N = length(t);
 
 EarthParams = struct();
@@ -23,8 +23,8 @@ ChibisParams.HMax = 0.2;
 ChibisParams.MMax = 0.005;
 ChibisParams.JRotor = 5e-4;
 % параметры для стабилизации - взяты из статьи МЮ
-ChibisParams.deltaMax = 0.002;
-ChibisParams.omegaMax = ChibisParams.HMax / ChibisParams.JRotor;
+ChibisParams.deltaMax = 0.2;
+ChibisParams.omegaMax = ChibisParams.HMax / ChibisParams.J(3, 3);
 
 % данные орбиты - взяты из статьи МЮ
 inc = 56.7 * pi / 180;
@@ -38,7 +38,7 @@ controlConst = controlParams(ChibisParams);
 
 for k=1:N-1
     satellite.initRefRel(k);
-    satellite.dotH(:, k) = flywhellControl(satellite, t, k, ChibisParams, controlConst, EarthParams);
+    satellite.controlExpected(:, k) = flywhellControl(satellite, t, k, ChibisParams, controlConst, EarthParams);
     satellite.omegaRotor(:, k) = satellite.H(:, k) / ChibisParams.JRotor;
 
     integrator(satellite, k, t(k), dt, EarthParams, ChibisParams);

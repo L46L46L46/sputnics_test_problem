@@ -1,10 +1,10 @@
-function [dotH] = flywhellControl(satellite, t, k, ChibisParams, controlConst, EarthParams)
+function [controlExpected] = flywhellControl(satellite, t, k, ChibisParams, controlConst, EarthParams)
     omega = satellite.omega(:, k);
 
     A = mQuat2dcm(satellite.QRel(:, k), true);
     satellite.S(:, k) = [A(2, 3) - A(3, 2);
-         A(3, 1) - A(1, 3);
-         A(1, 2) - A(2, 1)];
+                         A(3, 1) - A(1, 3);
+                         A(1, 2) - A(2, 1)];
     rSSC = mQuat2dcm(satellite.Q(:, k), true) * satellite.r(4:6, k);
     J = [ChibisParams.J(1, 1), 0, 0;
         0, ChibisParams.J(2, 2), 0;
@@ -20,6 +20,10 @@ function [dotH] = flywhellControl(satellite, t, k, ChibisParams, controlConst, E
         dotOmegaRef = (satellite.omegaRef(:, k) - satellite.omegaRef(:, k-1))/(t(k) - t(k-1));
     end
 
-    dotH = externalMoment + controlConst.ka * satellite.S(:, k) + controlConst.komega * satellite.omegaRel(:, k) ...
-        - cross(omega, J * omega) - J * dotOmegaRef - cross(omega, satellite.H(:, k)); 
+    % dotH = externalMoment + controlConst.ka * satellite.S(:, k) + controlConst.komega * satellite.omegaRel(:, k) ...
+    %     - cross(omega, J * omega) - J * dotOmegaRef - cross(omega, satellite.H(:, k));
+    % controlExpected = - dotH - cross(omega, satellite.H(:, k));
+
+    controlExpected = - externalMoment - controlConst.ka * satellite.S(:, k) - controlConst.komega * satellite.omegaRel(:, k) ...
+        + cross(omega, J * omega) + J * dotOmegaRef;
 end

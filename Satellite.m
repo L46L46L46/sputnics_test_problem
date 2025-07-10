@@ -13,6 +13,7 @@ classdef Satellite < handle
         omegaRotor;
         S;
         EarthParams;
+        controlExpected;
     end
 
     methods
@@ -41,6 +42,7 @@ classdef Satellite < handle
             % задание постоянных для удобства
             this.EarthParams = EarthParams;
             this.S = zeros(3, N);
+            this.controlExpected = zeros(3, N);
         end
 
         function initRefRel(this, k)

@@ -3,7 +3,7 @@
 %в ИСК, параметры планеты, а так же параметры аппарата. Функция возвращает
 %производную вектора x
 
-function [xDot] = ode(x, t, dotH, EarthParams, ChibisParams)
+function [xDot] = ode(x, t, controlExpected, EarthParams, ChibisParams)
     omega = x(1:3);
     Q = x(4:7);
     v = x(8:10);
@@ -15,13 +15,18 @@ function [xDot] = ode(x, t, dotH, EarthParams, ChibisParams)
 %% Определение механических моментов
     gravityMoment = 3 * EarthParams.muE / norm(rSSC)^5 * cross(rSSC, ChibisParams.J * rSSC);
     externalMoment = gravityMoment;
-    controlMoment = - dotH - cross(omega, H);
+    % реализуем управляющий момент в рамках маховиков
+    controlMoment = zeros(3, 1);
     for i=1:3
-        if (controlMoment(i) > ChibisParams.MMax)
+        if (H(i) >= ChibisParams.HMax) % насыщение
+            controlMoment(i) = 0;
+        elseif (controlExpected(i) >= ChibisParams.MMax)
             controlMoment(i) = ChibisParams.MMax;
+        else
+            controlMoment(i) = controlExpected(i);
         end
     end
-    moment = externalMoment + controlMoment;
+    moment = externalMoment + controlMoment;% + cross(omega, H);
 
 %% Расчёт производных
     dotOmega = ChibisParams.invJ * (moment - cross(omega, ChibisParams.J * omega));
@@ -33,5 +38,6 @@ function [xDot] = ode(x, t, dotH, EarthParams, ChibisParams)
         + EarthParams.delta * r / norm(r)^5 * (5 * r(3)^2 / norm(r)^2 - 1) ...
         - 2 * EarthParams.delta / norm(r)^5 * [0; 0; r(3)];
     dotR = v;
+    dotH = - controlMoment - cross(omega, H);
     xDot = [dotOmega; dotQ; dotV; dotR; dotH];
 end
