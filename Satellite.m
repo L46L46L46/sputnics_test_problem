@@ -39,7 +39,7 @@ classdef Satellite < handle
             this.Q(:, 1) = rand(4, 1);
             this.Q(:, 1) = this.Q(:, 1) / norm(this.Q(:, 1));
             this.omega(:, 1) = 1e-3 * ones(3, 1);
-            % задание постоянных для удобства
+            % задание постоянных для удобства и прочее...
             this.EarthParams = EarthParams;
             this.S = zeros(3, N);
             this.controlExpected = zeros(3, N);
@@ -58,5 +58,10 @@ classdef Satellite < handle
                 this.QRel(:, k) = MNQuatMultiply(mQuatConj(this.QRef(:, k)), this.Q(:, k));
             end
         end
+
+        function LambdaStabilization = getQStabilization(this, Lambda, k)
+            LambdaStabilization = MNQuatMultiply(mQuatConj(Lambda), this.QRel(:, k));
+        end
+
     end
 end

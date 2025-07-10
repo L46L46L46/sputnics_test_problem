@@ -3,7 +3,7 @@ clear all
 close all
 
 dt = 10;
-t = 0:dt:1e4;
+t = 0:dt:3600;
 N = length(t);
 
 EarthParams = struct();
@@ -29,6 +29,9 @@ ChibisParams.omegaMax = ChibisParams.HMax / ChibisParams.J(3, 3);
 % данные орбиты - взяты из статьи МЮ
 inc = 56.7 * pi / 180;
 hOrbit = 550;
+% кватернион, для которого проводится стабилизация - тут для ОСК
+Lambda = rand(4, 1);
+Lambda = Lambda / norm(Lambda);
 
 % задаём начальные данные и основные векторы
 satellite = Satellite(hOrbit, inc, N, EarthParams);
@@ -38,16 +41,16 @@ controlConst = controlParams(ChibisParams);
 
 for k=1:N-1
     satellite.initRefRel(k);
-    satellite.controlExpected(:, k) = flywhellControl(satellite, t, k, ChibisParams, controlConst, EarthParams);
+    satellite.controlExpected(:, k) = flywhellControl(satellite, t, k, ...
+        Lambda, ChibisParams, controlConst, EarthParams);
     satellite.omegaRotor(:, k) = satellite.H(:, k) / ChibisParams.JRotor;
 
     integrator(satellite, k, t(k), dt, EarthParams, ChibisParams);
-    disp(100 * k / N);
 end
 satellite.initRefRel(N);
+satellite.omegaRotor(:, N) = satellite.H(:, N) / ChibisParams.JRotor;
 
 getPlot(t, satellite.omegaRel, 'omegaRel');
 getPlot(t, satellite.QRel, 'QRel');
 getPlot(t, satellite.omegaRotor, 'omegaRotor');
-getPlot(t, satellite.S, 'S');
 getPlot(t, satellite.H, 'H');

@@ -1,10 +1,10 @@
-function [controlExpected] = flywhellControl(satellite, t, k, ChibisParams, controlConst, EarthParams)
+function [controlExpected] = flywhellControl(satellite, t, k, Lambda, ChibisParams, controlConst, EarthParams)
     omega = satellite.omega(:, k);
+    QStabilization = satellite.getQStabilization(Lambda, k);
+    %satellite.LambdaRel(:, k) = MNQuatMultiply(mQuatConj(satellite.Lambda), satellite.QRel(:, k));
 
-    A = mQuat2dcm(satellite.QRel(:, k), true);
-    satellite.S(:, k) = [A(2, 3) - A(3, 2);
-                         A(3, 1) - A(1, 3);
-                         A(1, 2) - A(2, 1)];
+%    satellite.S(:, k) = 4 * satellite.QRel(1, k) * satellite.QRel(2:4, k);
+    satellite.S(:, k) = 4 * QStabilization(1) * QStabilization(2:4);
     rSSC = mQuat2dcm(satellite.Q(:, k), true) * satellite.r(4:6, k);
     J = [ChibisParams.J(1, 1), 0, 0;
         0, ChibisParams.J(2, 2), 0;
@@ -19,10 +19,6 @@ function [controlExpected] = flywhellControl(satellite, t, k, ChibisParams, cont
     else
         dotOmegaRef = (satellite.omegaRef(:, k) - satellite.omegaRef(:, k-1))/(t(k) - t(k-1));
     end
-
-    % dotH = externalMoment + controlConst.ka * satellite.S(:, k) + controlConst.komega * satellite.omegaRel(:, k) ...
-    %     - cross(omega, J * omega) - J * dotOmegaRef - cross(omega, satellite.H(:, k));
-    % controlExpected = - dotH - cross(omega, satellite.H(:, k));
 
     controlExpected = - externalMoment - controlConst.ka * satellite.S(:, k) - controlConst.komega * satellite.omegaRel(:, k) ...
         + cross(omega, J * omega) + J * dotOmegaRef;
